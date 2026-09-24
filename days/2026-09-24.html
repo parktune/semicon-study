@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>day 01 · 2026-09-24 · 8대 공정 흐름 + DRAM/NAND 셀 구조 + DMI 위치</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+<nav class="topnav">
+  <a href="../index.html">◧ 웨이퍼 맵</a>
+  <span class="nav-disabled">← 이전 없음</span>
+  <span class="nav-disabled">다음: 09-25 포토 (예정) →</span>
+  <span class="spacer"></span>
+  <button class="btn" type="button" data-mode-btn>읽기 모드</button>
+</nav>
+
+<h1>day 01 · 8대 공정 흐름 + DRAM/NAND 셀 구조 + DMI 위치</h1>
+<p class="meta">2026-09-24(목) · 1주차 1일째 · 공정 큰 그림 + MPW 복기 시작 주</p>
+
+<div class="key-msg">
+  반도체 공정은 "산화/증착 → 포토 → 식각"을 층마다 수백 번 반복하는 일이고, DMI는 그 반복의 <em>스텝 사이</em>에 서서 "지금 만든 층이 설계대로 됐는가(계측)"와 "이물·패턴 결함이 있는가(검사)"를 수치와 맵으로 답해 다음 스텝으로 보낼지 결정하는 직무다.
+</div>
+
+<!-- ───────────────────────── 학습 ───────────────────────── -->
+<section class="card">
+  <h2>학습 1 · 8대 공정 흐름 — 무엇이 반복되는가</h2>
+  <p>SK하이닉스가 쓰는 "8대 공정" 구분은 다음 순서다. 앞의 6개가 <strong>전공정(Fab)</strong>, 뒤의 2개가 <strong>후공정</strong>이다.</p>
+  <ol>
+    <li><strong>웨이퍼 제조</strong>: 잉곳 성장 → 절단 → 연마. 300 mm 실리콘 웨이퍼</li>
+    <li><strong>산화(Oxidation)</strong>: 표면에 SiO₂ 막 형성. 절연·보호·마스크 역할</li>
+    <li><strong>포토(Photolithography)</strong>: 감광액 도포 → 노광 → 현상으로 패턴을 "그림". 미세화의 병목. <em>CD·overlay가 결정되는 곳</em> (내일 주제)</li>
+    <li><strong>식각(Etch)</strong>: 그린 패턴대로 막을 깎아 실제 구조를 만듦. 이방성·선택비</li>
+    <li><strong>증착(Deposition)·이온주입(Implant)</strong>: 막을 쌓고(CVD/ALD/PVD), 불순물을 넣어 전기적 특성을 만듦</li>
+    <li><strong>금속배선(Metallization)</strong>: 소자들을 W, Cu, Al 배선으로 연결(BEOL). 다층 배선</li>
+    <li><strong>EDS(Electrical Die Sorting)</strong>: 웨이퍼 상태에서 전기 테스트 → 다이별 양/불 판정. <em>여기서 수율이 숫자로 확정</em></li>
+    <li><strong>패키징</strong>: 절단 → 접합 → 몰딩 → 최종 테스트. HBM은 여기(TSV·본딩)가 핵심 난제</li>
+  </ol>
+  <p>여기에 이름은 없지만 거의 모든 스텝 사이에 끼는 것이 <strong>CMP(평탄화)와 세정(Cleaning)</strong>, 그리고 열처리다. 결함의 상당수가 이 "사이 공정"에서 나온다.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 940 300" style="min-width:940px" role="img" aria-label="8대 공정 흐름과 반복 구간, DMI 위치">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" style="fill:var(--fg)"/>
+        </marker>
+        <marker id="ar-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" style="fill:var(--sv-hi)"/>
+        </marker>
+      </defs>
+      <!-- 반복 브래킷 -->
+      <path class="ln-hi" d="M135,62 L135,52 L695,52 L695,62"/>
+      <text x="415" y="40" text-anchor="middle" class="t-hi">단위 공정 반복: 층마다 [산화/증착 → 포토 → 식각 → 주입·CMP·세정] · 마스크 수십 장 · 수백~1000+ 스텝</text>
+      <!-- 8 boxes -->
+      <g>
+        <rect x="20" y="90" width="100" height="52" rx="8" class="box"/><text x="70" y="121" text-anchor="middle">웨이퍼 제조</text>
+        <rect x="135" y="90" width="100" height="52" rx="8" class="box"/><text x="185" y="121" text-anchor="middle">산화</text>
+        <rect x="250" y="90" width="100" height="52" rx="8" class="box-hi"/><text x="300" y="121" text-anchor="middle" class="t-w">포토</text>
+        <rect x="365" y="90" width="100" height="52" rx="8" class="box-hi"/><text x="415" y="121" text-anchor="middle" class="t-w">식각</text>
+        <rect x="480" y="90" width="100" height="52" rx="8" class="box"/><text x="530" y="114" text-anchor="middle">증착 ·</text><text x="530" y="131" text-anchor="middle">이온주입</text>
+        <rect x="595" y="90" width="100" height="52" rx="8" class="box"/><text x="645" y="121" text-anchor="middle">금속배선</text>
+        <rect x="710" y="90" width="100" height="52" rx="8" class="box"/><text x="760" y="121" text-anchor="middle">EDS 테스트</text>
+        <rect x="825" y="90" width="100" height="52" rx="8" class="box"/><text x="875" y="121" text-anchor="middle">패키징</text>
+      </g>
+      <g class="ln" marker-end="url(#ar)">
+        <line x1="120" y1="116" x2="134" y2="116"/><line x1="235" y1="116" x2="249" y2="116"/><line x1="350" y1="116" x2="364" y2="116"/>
+        <line x1="465" y1="116" x2="479" y2="116"/><line x1="580" y1="116" x2="594" y2="116"/><line x1="695" y1="116" x2="709" y2="116"/><line x1="810" y1="116" x2="824" y2="116"/>
+      </g>
+      <!-- FEOL / BEOL 밴드 -->
+      <rect x="135" y="158" width="445" height="22" rx="4" class="box-soft"/>
+      <text x="357" y="174" text-anchor="middle" class="t-s">FEOL · 트랜지스터·셀(캐패시터/채널 홀) 형성 — 4개 공정이 층마다 반복</text>
+      <rect x="595" y="158" width="100" height="22" rx="4" class="box-soft"/>
+      <text x="645" y="174" text-anchor="middle" class="t-s">BEOL · 다층 배선</text>
+      <text x="760" y="174" text-anchor="middle" class="t-s t-m">수율 확정</text>
+      <text x="875" y="174" text-anchor="middle" class="t-s t-m">HBM: TSV·본딩</text>
+      <!-- 반복 루프 -->
+      <path class="ln-hi dash" d="M645,142 L645,205 L185,205 L185,146" marker-end="url(#ar-hi)"/>
+      <text x="415" y="200" text-anchor="middle" class="t-s t-hi">다음 층으로 → 반복 (DRAM 1c: 수백 스텝 / 3D NAND: 스택 후 HAR 식각)</text>
+      <!-- DMI 마커 -->
+      <g class="hi">
+        <rect x="292" y="232" width="16" height="16" transform="rotate(45 300 240)"/>
+        <rect x="407" y="232" width="16" height="16" transform="rotate(45 415 240)"/>
+        <rect x="522" y="232" width="16" height="16" transform="rotate(45 530 240)"/>
+        <rect x="637" y="232" width="16" height="16" transform="rotate(45 645 240)"/>
+      </g>
+      <text x="300" y="268" text-anchor="middle" class="t-s">CD · overlay · 결함</text>
+      <text x="415" y="268" text-anchor="middle" class="t-s">CD · 깊이 · 프로파일</text>
+      <text x="530" y="268" text-anchor="middle" class="t-s">두께 · 조성 · 파티클</text>
+      <text x="645" y="268" text-anchor="middle" class="t-s">CMP 후 두께 · 결함</text>
+      <text x="20" y="290" class="t-s t-m">◆ = DMI inline 계측·검사 지점 (스텝 사이, 샘플링). CMP·세정은 거의 모든 스텝 사이에 끼어 있음</text>
+    </svg>
+    <figcaption>그림 1. 8대 공정 순서와 반복 구간. 강조된 포토·식각은 패턴의 크기(CD)와 정렬(overlay)이 결정되는 곳이라 계측이 가장 집중된다.</figcaption>
+  </figure>
+
+  <h3>왜 "반복"이 핵심인가</h3>
+  <ul>
+    <li>한 층의 오차(CD 산포, 정렬 오차, 두께 편차)는 다음 층에 그대로 <strong>누적</strong>된다. 뒤에서 발견하면 어느 스텝이 원인인지 특정하기 어렵다</li>
+    <li>웨이퍼 한 장이 라인을 다 도는 데 <strong>2~3개월</strong>. 마지막 EDS에서야 불량을 알면 그 사이 투입된 수백 스텝의 비용이 통째로 손실</li>
+    <li>그래서 스텝 <em>사이</em>에 짧게 재고(inline), 그 결과로 다음 스텝을 보낼지(go), 잡을지(hold), 조건을 바꿀지(feedback) 결정한다. 이것이 DMI가 라인에 존재하는 이유</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>학습 2 · DRAM 셀 — 1T1C, 그리고 높이의 문제</h2>
+  <p>DRAM 셀은 <strong>트랜지스터 1개 + 캐패시터 1개(1T1C)</strong>다. 트랜지스터(access transistor)가 스위치, 캐패시터가 전하를 담아 1/0을 저장한다. 전하는 새기 때문에 주기적으로 <strong>리프레시</strong>해야 한다(Dynamic의 어원).</p>
+  <ul>
+    <li><strong>셀 면적 6F²</strong>(F = 최소 피처 크기). 면적을 줄이려 게이트를 기판 안에 묻은 <strong>BCAT(Buried Channel Array Transistor)</strong> 구조를 쓴다. 워드라인(WL)이 매립 게이트다</li>
+    <li>셀 면적은 줄어도 <strong>캐패시턴스는 일정 이상 유지</strong>해야 하므로(리프레시·센싱 마진), 캐패시터를 <strong>위로 높게</strong> 세운다 → 종횡비(AR) 수십:1의 실린더. 유전체는 high-k(ZrO₂ 계열, ZAZ)</li>
+    <li>비트라인(BL)은 WL과 직교. 셀 데이터는 BL 전압 변화를 센스앰프가 증폭해 읽는다</li>
+    <li>SK하이닉스 현행 노드: 10nm급 6세대(1c). 미세화가 한계에 오면서 캐패시터 높이·기울어짐이 계측·검사의 주요 난제</li>
+  </ul>
+
+  <figure class="fig">
+    <svg viewBox="0 0 640 320" style="min-width:640px" role="img" aria-label="DRAM 1T1C 셀 단면 개념도">
+      <!-- 플레이트 -->
+      <rect x="60" y="15" width="420" height="10" class="metal"/>
+      <text x="490" y="24" class="t-s">플레이트 전극 (공통)</text>
+      <!-- 캐패시터 2개 -->
+      <g>
+        <rect x="70" y="25" width="60" height="115" class="metal"/>
+        <rect x="76" y="31" width="48" height="109" class="nit"/>
+        <rect x="82" y="37" width="36" height="103" class="poly"/>
+        <rect x="410" y="25" width="60" height="115" class="metal"/>
+        <rect x="416" y="31" width="48" height="109" class="nit"/>
+        <rect x="422" y="37" width="36" height="103" class="poly"/>
+      </g>
+      <text x="200" y="55" class="t-s">저장 노드(SN, 하부 전극)</text>
+      <line x1="118" y1="60" x2="196" y2="55" class="ln-m"/>
+      <text x="200" y="80" class="t-s">유전체 high-k (ZrO₂/Al₂O₃/ZrO₂)</text>
+      <line x1="124" y1="85" x2="196" y2="80" class="ln-m"/>
+      <text x="200" y="105" class="t-s">캐패시터 = 실린더, AR 수십:1</text>
+      <!-- 높이 치수 -->
+      <line x1="150" y1="25" x2="150" y2="140" class="ln-hi" marker-start="url(#ar-hi)" marker-end="url(#ar-hi)"/>
+      <text x="158" y="130" class="t-s t-hi">높이 ≫ 폭</text>
+      <!-- SNC -->
+      <rect x="90" y="140" width="20" height="90" class="metal"/>
+      <rect x="430" y="140" width="20" height="90" class="metal"/>
+      <text x="200" y="160" class="t-s">저장 노드 콘택(SNC)</text>
+      <line x1="110" y1="175" x2="196" y2="160" class="ln-m"/>
+      <!-- BL -->
+      <rect x="200" y="185" width="160" height="15" class="metal"/>
+      <rect x="270" y="200" width="20" height="30" class="metal"/>
+      <text x="205" y="180" class="t-s">비트라인(BL) — 지면과 수직으로 지나감</text>
+      <!-- 기판 -->
+      <rect x="40" y="230" width="480" height="70" class="si"/>
+      <rect x="146" y="241" width="48" height="43" class="ox"/>
+      <rect x="150" y="245" width="40" height="35" class="metal"/>
+      <rect x="346" y="241" width="48" height="43" class="ox"/>
+      <rect x="350" y="245" width="40" height="35" class="metal"/>
+      <text x="170" y="266" text-anchor="middle" class="t-s t-w">WL</text>
+      <text x="370" y="266" text-anchor="middle" class="t-s t-w">WL</text>
+      <text x="48" y="294" class="t-s">Si 기판 · 매립 게이트(BCAT) = 워드라인, 채널은 WL 양옆(SNC↔BL 콘택)</text>
+      <!-- 우측 주석 -->
+      <text x="490" y="60" class="t-s t-warn">계측·검사 난제</text>
+      <text x="490" y="78" class="t-s">· 바닥 CD·깊이 (광학으론 안 보임)</text>
+      <text x="490" y="96" class="t-s">· 기울어짐(leaning) → 인접 SN 브리지</text>
+      <text x="490" y="114" class="t-s">· 미개방(not-open) 콘택</text>
+      <text x="490" y="132" class="t-s">· 유전체 두께 Å 단위 → 누설</text>
+      <!-- 결함 예시 -->
+    </svg>
+    <figcaption>그림 2. DRAM 1T1C 셀 단면(개념도). 좁은 면적에서 캐패시턴스를 지키려 위로 쌓은 결과, 셀 하나가 곧 고종횡비(HAR) 구조가 된다.</figcaption>
+  </figure>
+</section>
+
+<section class="card">
+  <h2>학습 3 · 3D NAND 셀 — 수직 채널 홀과 CTF</h2>
+  <p>NAND는 전하를 <strong>가둬서</strong>(비휘발) 저장한다. 과거 평면 NAND는 <em>플로팅 게이트</em>(도체)에 전하를 넣었지만, 3D NAND는 <strong>CTF(Charge Trap Flash)</strong>: 절연체인 <strong>질화막(SiN)</strong>에 전하를 트랩한다. 도체가 아니라 셀 간 간섭이 적고 얇게 만들 수 있어 수직 적층에 유리하다.</p>
+  <ul>
+    <li><strong>구조</strong>: 산화막/질화막을 교대로 수백 층 쌓은 뒤(ON 스택), <strong>채널 홀</strong>을 한 번에 뚫고, 홀 안쪽에 <em>블로킹 산화막 → 전하 트랩(SiN) → 터널 산화막 → 폴리 채널</em>을 차례로 증착. 이후 질화막 층을 텅스텐으로 치환해 <strong>워드라인</strong>을 만든다(gate replacement)</li>
+    <li>홀 하나가 <strong>셀 스트링</strong>: 층 수만큼의 셀이 직렬. 위는 BL/SSL, 아래는 GSL/공통 소스라인</li>
+    <li><strong>단수 경쟁</strong>: SK하이닉스 238단 → 321단 양산. 단수↑ = 홀 깊이↑ = 종횡비↑ → 식각 난이도와 <em>계측 난이도가 함께</em> 오른다</li>
+    <li>SK하이닉스 <strong>4D NAND</strong> = CTF + <strong>PUC(Peri Under Cell)</strong>: 주변회로를 셀 아래에 두어 면적을 줄인 구조. 면접에서 "4D가 뭐냐" 물으면 이 두 요소로 답한다</li>
+  </ul>
+
+  <figure class="fig">
+    <svg viewBox="0 0 640 340" style="min-width:640px" role="img" aria-label="3D NAND 셀 스트링 단면 개념도">
+      <!-- BL -->
+      <rect x="40" y="30" width="360" height="12" class="metal"/>
+      <text x="44" y="24" class="t-s">비트라인(BL) · 선택 트랜지스터(SSL)</text>
+      <!-- 스택 12층: WL(metal)/ox 교대 -->
+      <g>
+        <rect x="40" y="60" width="360" height="15" class="metal"/><rect x="40" y="75" width="360" height="15" class="ox"/>
+        <rect x="40" y="90" width="360" height="15" class="metal"/><rect x="40" y="105" width="360" height="15" class="ox"/>
+        <rect x="40" y="120" width="360" height="15" class="metal"/><rect x="40" y="135" width="360" height="15" class="ox"/>
+        <rect x="40" y="150" width="360" height="15" class="metal"/><rect x="40" y="165" width="360" height="15" class="ox"/>
+        <rect x="40" y="180" width="360" height="15" class="metal"/><rect x="40" y="195" width="360" height="15" class="ox"/>
+        <rect x="40" y="210" width="360" height="15" class="metal"/><rect x="40" y="225" width="360" height="15" class="ox"/>
+      </g>
+      <text x="60" y="48" class="t-s t-m">⋮ 실제로는 200~300단+</text>
+      <!-- 채널 홀 2개 -->
+      <g>
+        <rect x="140" y="42" width="56" height="210" class="ox"/>
+        <rect x="146" y="42" width="44" height="210" class="nit"/>
+        <rect x="152" y="42" width="32" height="210" class="ox"/>
+        <rect x="157" y="42" width="22" height="210" class="poly"/>
+        <rect x="163" y="42" width="10" height="210" class="si"/>
+        <rect x="280" y="42" width="56" height="210" class="ox"/>
+        <rect x="286" y="42" width="44" height="210" class="nit"/>
+        <rect x="292" y="42" width="32" height="210" class="ox"/>
+        <rect x="297" y="42" width="22" height="210" class="poly"/>
+        <rect x="303" y="42" width="10" height="210" class="si"/>
+      </g>
+      <!-- 소스 라인 / PUC -->
+      <rect x="40" y="252" width="360" height="12" class="poly"/>
+      <text x="44" y="278" class="t-s">공통 소스라인(CSL) · 선택 트랜지스터(GSL)</text>
+      <rect x="40" y="286" width="360" height="34" rx="6" class="box-soft"/>
+      <text x="220" y="308" text-anchor="middle" class="t-s t-hi">Peri 회로를 셀 아래에 (PUC) — 하이닉스 "4D NAND" = CTF + PUC</text>
+      <!-- 우측 라벨 -->
+      <line x1="400" y1="67" x2="425" y2="67" class="ln-m"/><text x="430" y="71" class="t-s">워드라인(W) — 층마다 셀 1개</text>
+      <line x1="400" y1="82" x2="425" y2="90" class="ln-m"/><text x="430" y="94" class="t-s">층간 산화막</text>
+      <line x1="336" y1="120" x2="425" y2="120" class="ln-m"/><text x="430" y="124" class="t-s">블로킹 산화막</text>
+      <line x1="330" y1="145" x2="425" y2="145" class="ln-m"/><text x="430" y="149" class="t-s t-hi">전하 트랩층 SiN (CTF)</text>
+      <line x1="324" y1="170" x2="425" y2="170" class="ln-m"/><text x="430" y="174" class="t-s">터널 산화막</text>
+      <line x1="319" y1="195" x2="425" y2="195" class="ln-m"/><text x="430" y="199" class="t-s">폴리 실리콘 채널</text>
+      <line x1="308" y1="220" x2="425" y2="220" class="ln-m"/><text x="430" y="224" class="t-s">코어 절연체</text>
+      <text x="430" y="256" class="t-s t-warn">홀 하나 = 셀 스트링(직렬)</text>
+      <text x="430" y="274" class="t-s">단수↑ → 홀 깊이↑ → AR 수십:1</text>
+      <text x="430" y="292" class="t-s">→ 휨(bowing)·상하 CD 차·미개방</text>
+      <text x="430" y="310" class="t-s">→ 검사·계측 난제 (깊은 곳이 안 보임)</text>
+    </svg>
+    <figcaption>그림 3. 3D NAND 스트링 단면(개념도). 채널 홀 하나에 층 수만큼 셀이 직렬로 놓이며, 홀 깊이가 곧 계측 난이도다.</figcaption>
+  </figure>
+
+  <table>
+    <thead><tr><th></th><th>DRAM</th><th>NAND</th></tr></thead>
+    <tbody>
+      <tr><td>저장 방식</td><td>캐패시터 전하 (휘발, 리프레시)</td><td>SiN 트랩 전하 (비휘발)</td></tr>
+      <tr><td>셀 구조</td><td>1T1C, 6F², BCAT</td><td>CTF 수직 스트링, 홀당 수백 셀</td></tr>
+      <tr><td>미세화 축</td><td>평면 미세화(1a→1b→1c) + 캐패시터 높이</td><td>수직 적층 단수(238 → 321단)</td></tr>
+      <tr><td>공통 HAR 구조</td><td>캐패시터 실린더, 콘택</td><td>채널 홀, 슬릿, 계단(staircase) 콘택</td></tr>
+      <tr><td>대표 계측·검사 과제</td><td>SN 기울어짐·브리지, 유전체 두께, 콘택 미개방</td><td>홀 바닥 CD·휨, 층 두께 균일도, 미개방</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h2>학습 4 · DMI는 어디에 서 있는가 — 계측 vs 검사, 그리고 피드백</h2>
+  <p><strong>DMI(Defect &amp; Metrology Inspection)</strong>는 이름 그대로 두 가지를 한다.</p>
+  <table>
+    <thead><tr><th></th><th>계측 (Metrology)</th><th>검사 (Inspection)</th></tr></thead>
+    <tbody>
+      <tr><td>묻는 것</td><td>"만든 구조의 <strong>치수</strong>가 설계대로인가?"</td><td>"있어야 할 것이 없거나, 없어야 할 것이 <strong>있는가</strong>?"</td></tr>
+      <tr><td>출력</td><td>수치: CD, overlay, 막 두께, 프로파일(깊이·측벽각), 조성</td><td>결함 맵: 위치·크기·개수, 이후 review SEM으로 분류</td></tr>
+      <tr><td>측정 범위</td><td>정해진 위치(site) 소수 → 통계</td><td>웨이퍼 전면(또는 넓은 영역) 스캔</td></tr>
+      <tr><td>대표 장비</td><td>CD-SEM, OCD(scatterometry), overlay 계측기, 엘립소미터</td><td>명시야/암시야 광학 검사기, e-beam 검사, review SEM</td></tr>
+      <tr><td>결과가 가는 곳</td><td>SPC 관리도 → 공정 조건 보정(APC), 다음 스텝 보정(피드포워드)</td><td>결함 원인 장비/스텝 추적, 웨이퍼 hold·재작업·스크랩, 킬러 결함 → 수율 예측</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li><strong>inline</strong>: 라인 안에서 스텝 사이에 잰다. 시간을 잡아먹으므로 <em>전수가 아닌 샘플링</em>(lot 중 몇 장, 웨이퍼 중 몇 site). 무엇을 얼마나 재는지 정하는 것 자체가 DMI의 일</li>
+    <li><strong>SPC(Statistical Process Control)</strong>: 측정값을 시간순으로 관리 한계(UCL/LCL)와 함께 봄. 한계를 벗어나거나 트렌드가 생기면 공정에 알린다</li>
+    <li><strong>APC(Advanced Process Control)</strong>: 측정값으로 다음 웨이퍼/다음 스텝 조건을 자동 보정. 예: 앞 층 overlay 측정값으로 다음 노광 정렬 보정(피드포워드), 식각 후 CD로 노광 dose 보정(피드백)</li>
+    <li>DMI가 별도 조직인 이유: 측정은 <em>그 자체가 오차를 가진다</em>. 공정 산포와 계측 산포를 분리하고(Gauge R&amp;R), 장비 간 matching을 맞추고, 신규 구조(HAR·3D)에 맞는 계측법을 개발하는 전문성이 필요하다. → 내 경험기술서 메시지("무엇을 어떻게 측정할지 먼저 정의")가 정확히 이 지점</li>
+  </ul>
+
+  <figure class="fig">
+    <svg viewBox="0 0 900 280" style="min-width:900px" role="img" aria-label="DMI inline 계측·검사 루프">
+      <g>
+        <rect x="20" y="40" width="150" height="56" rx="10" class="box"/><text x="95" y="64" text-anchor="middle">공정 장비</text><text x="95" y="82" text-anchor="middle" class="t-s t-m">스텝 n</text>
+        <rect x="210" y="40" width="170" height="56" rx="10" class="box-hi"/><text x="295" y="64" text-anchor="middle" class="t-w">DMI 계측 · 검사</text><text x="295" y="82" text-anchor="middle" class="t-s t-w">샘플링 (lot / wafer / site)</text>
+        <rect x="420" y="40" width="180" height="56" rx="10" class="box"/><text x="510" y="64" text-anchor="middle">데이터</text><text x="510" y="82" text-anchor="middle" class="t-s t-m">SPC 관리도 · 결함 맵</text>
+        <rect x="640" y="40" width="110" height="56" rx="10" class="box"/><text x="695" y="64" text-anchor="middle">판단</text><text x="695" y="82" text-anchor="middle" class="t-s t-m">go / hold / 보정</text>
+        <rect x="780" y="40" width="110" height="56" rx="10" class="box"/><text x="835" y="64" text-anchor="middle">공정 장비</text><text x="835" y="82" text-anchor="middle" class="t-s t-m">스텝 n+1</text>
+      </g>
+      <g class="ln" marker-end="url(#ar)">
+        <line x1="170" y1="68" x2="209" y2="68"/><line x1="380" y1="68" x2="419" y2="68"/><line x1="600" y1="68" x2="639" y2="68"/><line x1="750" y1="68" x2="779" y2="68"/>
+      </g>
+      <text x="190" y="60" text-anchor="middle" class="t-s t-m">웨이퍼</text>
+      <text x="765" y="34" text-anchor="middle" class="t-s t-hi">피드포워드</text>
+      <!-- 피드백 루프 -->
+      <path class="ln-hi dash" d="M695,96 L695,180 L95,180 L95,100" marker-end="url(#ar-hi)"/>
+      <text x="230" y="174" class="t-s t-hi">피드백: 레시피·장비 조건 보정(APC), 웨이퍼 hold / 재작업, 결함 원인 장비 추적</text>
+      <!-- 미니 SPC 차트 -->
+      <rect x="430" y="108" width="160" height="60" rx="4" class="box"/>
+      <line x1="436" y1="118" x2="584" y2="118" class="ln-warn dash"/><text x="586" y="121" class="t-s t-warn">UCL</text>
+      <line x1="436" y1="158" x2="584" y2="158" class="ln-warn dash"/><text x="586" y="161" class="t-s t-warn">LCL</text>
+      <polyline class="ln-hi" points="440,140 458,136 476,143 494,138 512,141 530,133 548,128 566,112"/>
+      <circle cx="566" cy="112" r="4" class="warn"/>
+      <text x="470" y="185" class="t-s t-m">← 트렌드 → 관리 한계 이탈</text>
+      <!-- 하단 정리 -->
+      <text x="20" y="225" class="t-s"><tspan class="t-hi">계측</tspan> = 수치 (CD · overlay · 두께 · 프로파일) → 관리도 → 조건 보정</text>
+      <text x="20" y="248" class="t-s"><tspan class="t-hi">검사</tspan> = 결함 유무·위치·크기 → 결함 맵 → review SEM 분류(ADC) → 원인 스텝 추적 · 킬러 결함이면 수율 손실</text>
+      <text x="20" y="271" class="t-s t-m">공통 전제: 측정 자체의 신뢰성(재현성 · 정확도 · 장비 matching). 기준이 틀리면 공정이 아니라 계측을 고쳐야 한다.</text>
+    </svg>
+    <figcaption>그림 4. DMI inline 루프. 스텝 사이에서 샘플링 측정 → 데이터 → 판단 → 앞뒤 스텝으로 피드백/피드포워드.</figcaption>
+  </figure>
+</section>
+
+<!-- ───────────────────────── 점검 ───────────────────────── -->
+<section class="card">
+  <h2>점검 질문 (터미널에서 답하고 피드백 받기)</h2>
+  <p class="muted" style="font-size:.9rem">퀴즈 모드에서는 답이 가려진다. 먼저 소리 내어(또는 써서) 답한 뒤 펼쳐서 비교.</p>
+
+  <details class="qa">
+    <summary><span class="qnum">Q1.</span> 8대 공정을 순서대로 말하고, 그중 "반복되는 구간"이 어디인지, 그 반복이 왜 DMI의 부담을 키우는지 설명하라.</summary>
+    <div class="answer">
+      <div class="label">모범답안 방향</div>
+      <p>웨이퍼 제조 → 산화 → 포토 → 식각 → 증착·이온주입 → 금속배선 → EDS → 패키징. 이 중 <strong>산화/증착 → 포토 → 식각(→ 주입·CMP·세정)</strong>이 층마다 반복되는 단위 공정 묶음이고, DRAM은 수백 스텝, 3D NAND는 스택 후 한 번에 뚫는 HAR 식각이 병목이다.</p>
+      <p>반복이 부담을 키우는 이유 세 가지: (1) 각 스텝의 산포와 결함이 <strong>누적</strong>되어 뒤에서 발견하면 원인 스텝을 특정하기 어렵다, (2) 웨이퍼가 라인을 다 도는 데 2~3개월이라 EDS에서 알면 투입 비용이 통째로 손실, (3) 따라서 스텝 사이 inline에서 잡아야 하는데 측정 시간도 비용이므로 <strong>무엇을 어디서 얼마나 샘플링할지</strong>가 DMI의 설계 문제가 된다.</p>
+      <p class="muted">놓치기 쉬운 것: "8대 공정 외우기"에서 끝내지 말고 <em>반복 → 누적 → inline 샘플링</em>으로 DMI까지 연결해야 답이 된다.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="qnum">Q2.</span> DRAM 셀과 3D NAND 셀의 구조를 각각 한두 문장으로 설명하고, 두 구조가 공통으로 만드는 계측·검사 난제가 무엇인지 말하라.</summary>
+    <div class="answer">
+      <div class="label">모범답안 방향</div>
+      <p><strong>DRAM</strong>: 매립 게이트 트랜지스터(BCAT) 1개와 저장 캐패시터 1개(1T1C), 6F² 셀. 면적은 줄이면서 캐패시턴스는 지켜야 하니 캐패시터를 종횡비 수십:1 실린더로 세운다. 전하가 새므로 리프레시.</p>
+      <p><strong>3D NAND</strong>: 산화막/질화막 스택에 수직 채널 홀을 뚫고 블로킹 산화막-전하 트랩 SiN(CTF)-터널 산화막-폴리 채널을 증착. 질화막을 텅스텐 WL로 치환. 홀 하나가 층 수만큼의 셀이 직렬인 스트링. 하이닉스 4D = CTF + PUC.</p>
+      <p><strong>공통 난제 = 고종횡비(HAR) 3D 구조</strong>: 광학은 깊은 곳(바닥 CD, 깊이, 휨)이 안 보이고, e-beam도 깊은 홀 바닥 신호가 약하다. 기울어짐·브리지·미개방(not-open) 같은 결함은 위에서 보면 정상처럼 보일 수 있다. → OCD 모델링, X-ray(CD-SAXS), e-beam, 파괴 단면(TEM) 레퍼런스를 조합하는 <em>하이브리드 계측</em>이 필요.</p>
+      <p class="muted">놓치기 쉬운 것: CTF를 "플로팅 게이트"라고 하면 바로 감점. 절연체(SiN)에 트랩하는 것이 3D 적층에 유리한 이유까지 말할 것.</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary><span class="qnum">Q3.</span> 계측(metrology)과 검사(inspection)의 차이를 정의하고, 각각의 결과가 공정에 어떻게 피드백되는지(누가 무엇을 결정하나) 설명하라.</summary>
+    <div class="answer">
+      <div class="label">모범답안 방향</div>
+      <p><strong>계측</strong>은 정해진 site에서 물리량(CD, overlay, 두께, 프로파일)을 <em>수치</em>로 잰다. 결과는 SPC 관리도에 올라가고, 관리 한계 이탈·트렌드가 보이면 공정 조건을 보정한다(피드백, APC). 앞 층 측정값으로 다음 스텝을 보정하는 피드포워드도 있다(예: overlay 보정).</p>
+      <p><strong>검사</strong>는 웨이퍼 전면을 스캔해 결함의 <em>유무·위치·크기</em>를 찾아 결함 맵을 만든다. review SEM으로 분류(ADC)해 원인 장비·스텝을 추적하고, 웨이퍼를 hold·재작업·스크랩할지, 킬러 결함으로 수율에 얼마나 영향이 있을지 판단한다.</p>
+      <p>둘의 공통 전제는 <strong>측정 자체의 신뢰성</strong>이다. 재현성(precision), 정확도(accuracy), 장비 간 matching이 확보되지 않으면 공정이 아니라 계측을 고쳐야 한다. 이 지점이 내 GT 정제 경험("잘못된 정답으로는 어떤 모델도 채점할 수 없다")과 직접 연결된다.</p>
+      <p class="muted">놓치기 쉬운 것: "계측은 숫자, 검사는 결함"에서 멈추지 말고 <em>결과가 어디로 가서 무엇을 바꾸는지</em>(SPC/APC, hold/재작업, 수율)까지 말할 것.</p>
+    </div>
+  </details>
+</section>
+
+<section class="card">
+  <h2>예상 꼬리질문</h2>
+  <ol class="follow">
+    <li>"공정 엔지니어가 직접 재면 되지, DMI가 왜 별도 조직인가?"
+      <span class="dir">측정도 오차를 가진 하나의 공정이다. 공정 산포와 계측 산포 분리(Gauge R&amp;R), 수십 대 장비 matching, 공통 기준·레시피 관리, 신규 구조(HAR·3D)에 맞는 계측법 개발은 전담 전문성이 필요. 공정 팀은 "만드는" 쪽, DMI는 "판정 기준을 신뢰할 수 있게 만드는" 쪽.</span></li>
+    <li>"왜 모든 웨이퍼를 다 측정하지 않나?"
+      <span class="dir">계측은 시간·비용(CD-SEM은 느리고, 단면 분석은 파괴적). lot·wafer·site 단위 샘플링을 설계하고, 위험이 큰 스텝·장비에 더 많이 배정. 최근에는 장비 센서 데이터로 측정값을 예측하는 virtual metrology로 샘플링 공백을 보완(4주차 주제).</span></li>
+    <li>"NAND 단수가 300단을 넘으면 어떤 측정이 어려워지나?"
+      <span class="dir">홀 깊이·바닥 CD·휨(bowing)·상하 CD 차, 수백 층 각 층의 두께 균일도, 계단 콘택 정렬. 광학 파장 한계 → IR OCD, X-ray(CD-SAXS), 깊은 곳 e-beam. 파괴 분석 레퍼런스와 비파괴 계측의 상관을 맞추는 일이 핵심.</span></li>
+    <li>"MPW에서 DRC/LVS를 통과했는데 실측이 시뮬과 달랐다고 했다. 그게 DMI와 무슨 상관인가?"
+      <span class="dir">설계 규칙 통과 = 실물 보증이 아니다. 공정 산포·기생·측정 셋업까지 반영해야 검증된다는 것을 체득. DMI는 바로 그 "설계대로 만들어졌는가"를 실물에서 확인하는 직무이고, 설계 관점을 아니까 어떤 치수 오차가 소자 특성(예: matching)에 얼마나 아픈지 이해한다.</span></li>
+    <li>"DRAM 캐패시터가 기울어 옆 셀과 붙으면 어떤 결과가 생기나?"
+      <span class="dir">인접 셀 단락 → 비트 페일. EDS에서 fail bit로 잡히고, 리던던시로 리페어 가능한 한도를 넘으면 다이 fail. 이런 "킬러 결함"을 라인 중간(inline 검사)에서 잡으면 원인 스텝(식각/세정/증착)에 바로 피드백 가능. → 3주차 수율 주제.</span></li>
+  </ol>
+</section>
+
+<section class="card">
+  <h2>오늘의 용어</h2>
+  <dl class="terms">
+    <dt>8대 공정</dt><dd>웨이퍼 제조 · 산화 · 포토 · 식각 · 증착·이온주입 · 금속배선 · EDS · 패키징. 앞 6개 = 전공정(Fab)</dd>
+    <dt>FEOL / BEOL</dt><dd>Front/Back End Of Line. 트랜지스터·셀을 만드는 앞단 vs 금속 배선으로 연결하는 뒷단</dd>
+    <dt>단위 공정 · 스텝 · 마스크 레이어</dt><dd>산화/증착→포토→식각 한 묶음이 한 층(레이어). 마스크 수십 장 = 레이어 수십 개 = 스텝 수백~1000+</dd>
+    <dt>1T1C · 6F² · BCAT</dt><dd>DRAM 셀 = 트랜지스터 1 + 캐패시터 1. 셀 면적 6F². 게이트를 기판에 묻은 Buried Channel Array Transistor</dd>
+    <dt>CTF · PUC · 4D NAND</dt><dd>Charge Trap Flash(SiN 트랩) + Peri Under Cell(주변회로를 셀 아래). 둘을 합친 SK하이닉스 명칭이 4D NAND</dd>
+    <dt>HAR (High Aspect Ratio)</dt><dd>고종횡비. 폭 대비 깊이가 수십 배인 구조(캐패시터, 채널 홀, 콘택). 식각·계측·검사 공통 난제</dd>
+    <dt>inline 계측·검사</dt><dd>라인 안에서 스텝 사이에 샘플링으로 재는 것. 전수가 아니라 설계된 샘플링</dd>
+    <dt>계측(Metrology) vs 검사(Inspection)</dt><dd>치수·물성 수치 vs 결함 유무·위치. 출력이 관리도 vs 결함 맵</dd>
+    <dt>SPC / APC</dt><dd>Statistical Process Control(관리도로 이탈·트렌드 감지) / Advanced Process Control(측정값으로 조건 자동 보정)</dd>
+    <dt>피드백 / 피드포워드</dt><dd>측정값으로 같은 스텝 조건을 고침 / 다음 스텝 조건을 미리 보정(예: overlay)</dd>
+    <dt>EDS</dt><dd>Electrical Die Sorting. 웨이퍼 상태 전기 테스트. 수율이 숫자로 확정되는 곳</dd>
+    <dt>킬러 결함 (선행)</dt><dd>다이를 fail시키는 결함. 3주차에서 수율·결함 밀도와 함께 다룸</dd>
+  </dl>
+</section>
+
+<section class="card">
+  <h2>다음 세션 예고 · day 02 (09-25 금)</h2>
+  <p><strong>포토: 노광·현상, CD·overlay가 생기는 지점.</strong> 오늘 그림 1에서 강조한 포토 박스를 열어 본다. 감광액 도포 → 노광(스캐너, EUV/ArF) → PEB → 현상 흐름에서 <em>CD가 어디서 흔들리고(dose·focus), overlay가 어디서 어긋나는지(정렬·스테이지·왜곡)</em>, 그리고 그 두 값이 왜 DMI 계측의 1순위인지 연결한다. 오늘 Q1~Q3 답변을 먼저 받고 시작한다.</p>
+</section>
+
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

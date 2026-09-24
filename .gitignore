@@ -1,0 +1,12 @@
+# 개인 맥락 파일 — 로컬 전용, GitHub(public)에 올리지 않음
+CLAUDE.md
+progress.md
+
+# 사용자가 넣는 원본 seed(개인 파일). README만 공개
+seed/*
+!seed/README.md
+
+# OS / 에디터
+Thumbs.db
+.DS_Store
+.vscode/

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>SK하이닉스 면접 준비 — 진행 현황</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>SK하이닉스 Half-Day 면접 준비 · 7주 웨이퍼 맵</h1>
+  <p class="meta">2026-09-24(목) ~ 2026-11-11(수) · 가로 한 줄 = 1주(목→수) · 다이를 누르면 그날 기록으로 이동</p>
+
+  <div class="card">
+    <div class="wafer-wrap">
+      <div class="wafer" id="wafer"></div>
+      <div style="flex:1; min-width: 200px;">
+        <div class="stat" id="stat-done">0 <small>/ 49 기록</small></div>
+        <p class="muted" id="stat-today"></p>
+        <div class="legend">
+          <span class="l-done">기록됨</span>
+          <span class="l-today">오늘</span>
+          <span class="l-empty">예정</span>
+          <span class="l-weekend">주말(택1 세션)</span>
+        </div>
+        <div class="upnext" id="upnext"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>기록 목록</h2>
+    <ul class="daylist" id="daylist"></ul>
+    <p class="muted" style="font-size:.88rem">문서: <code>CLAUDE.md</code>(고정 맥락) · <code>curriculum.md</code>(커리큘럼) · <code>progress.md</code>(진행·변경 기록)</p>
+  </div>
+</div>
+
+<script>
+/* ── 기록된 날: 새 일차를 만들 때 여기에 한 줄 추가 (file:// 에서는 fetch 불가) ── */
+var DAYS = [
+  { date: '2026-09-24', title: '8대 공정 흐름 + DRAM/NAND 셀 구조 + DMI 위치' }
+];
+
+/* ── 계획(curriculum.md 요약). 인덱스 0 = 2026-09-24(목). 주말은 토·일 중 하루만 진행 ── */
+var PLAN = [
+  '8대 공정 흐름 + DRAM/NAND 셀 구조 + DMI 위치', '포토: 노광·현상, CD·overlay가 생기는 지점', '주말(택1): 공정 흐름 백지 설명 + 퀴즈, MPW 심층 모의', '주말(택1): 공정 흐름 백지 설명 + 퀴즈, MPW 심층 모의', '식각·증착: 이방성, 선택비, 막 두께·프로파일', 'MPW 복기①: LDO 동작, startup이 느린 이유, subthreshold', '이온주입·CMP·세정·금속배선 + 공정별 대표 결함',
+  '계측 vs 검사, inline 샘플링, SPC', 'CD 계측: CD-SEM vs OCD', '주말(택1): 1~2주 누적 퀴즈 + 번역 답변 초안', '주말(택1): 1~2주 누적 퀴즈 + 번역 답변 초안', 'Overlay(IBO/DBO), 두께(엘립소미트리)', '결함 검사: 명시야/암시야 vs e-beam, review SEM, ADC', 'MPW 복기②: layout 결정 이유, DRC/LVS, 기생',
+  '수율·결함 밀도·킬러 결함, 웨이퍼 맵 signature', '계측 신뢰성: precision/accuracy, Gauge R&R, 장비 matching', '주말(택1): 심층 인터뷰 모의 1회(경험 3개)', '주말(택1): 심층 인터뷰 모의 1회(경험 3개)', 'MPW 복기③: 시뮬 vs 실측 차이 원인', '번역①: GT 정제 ↔ 레퍼런스 신뢰성, IoU ↔ 좌표 정합', '번역②: 재현율 ↔ miss vs nuisance, 시간적 이상치 ↔ SPC',
+  'HBM, 고단 NAND, EUV와 계측 난제', 'AI/ML × 계측·검사: ADC, virtual metrology', '주말(택1): PT 시뮬 1회', '주말(택1): PT 시뮬 1회', '이직 동기 + 1분 자기소개', '"프로젝트 하나뿐" 방어 + 2지망 PE 연결', 'PT 프레임 + LLM 출력 검증 체크리스트',
+  '짧은 PT: 특정 층 결함 증가 원인 좁히기', 'LLM 오류 거르기 훈련', '주말(택1): 풀 모의 1(PT + 심층)', '주말(택1): 풀 모의 1(PT + 심층)', 'GD 화법: 경청·요약·합의', 'GD 주제 연습: 기술윤리, AI와 일, 인문학형', '반도체 누적 퀴즈',
+  'SKMS, VWBE·SUPEX, 인재상', '인성 질문 STAR', '주말(택1): 풀 모의 2(Half-Day 전 구성)', '주말(택1): 풀 모의 2(Half-Day 전 구성)', '지원서 문장별 압박질문 방어', '공정·계측 약점 재정리', 'PT 단축판(15분)',
+  '전 범위 랜덤 질문', '약한 영역 집중', '주말(택1): 최종 풀 모의 + 답변 카드 확정', '주말(택1): 최종 풀 모의 + 답변 카드 확정', '역질문 + 공정 백지 설명', '리허설·일정 조정 버퍼', '리허설·일정 조정 버퍼'
+];
+
+(function () {
+  var START = new Date(2026, 8, 24); // 2026-09-24 (월은 0부터)
+  var DOW = ['목', '금', '토', '일', '월', '화', '수'];
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function addDays(d, n) { var x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
+  function el(name, attrs, parent) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  var doneMap = {};
+  for (var i = 0; i < DAYS.length; i++) doneMap[DAYS[i].date] = DAYS[i];
+
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var todayIdx = Math.round((today - START) / 86400000);
+
+  /* ── 웨이퍼 맵 ── */
+  var W = 600, H = 540, CX = 300, CY = 262, R = 250, DIE = 44, GAP = 6, PITCH = DIE + GAP;
+  var gridLeft = CX - (7 * PITCH - GAP) / 2, gridTop = CY - (7 * PITCH - GAP) / 2;
+  var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: 420, role: 'img', 'aria-label': '7주 49일 웨이퍼 맵' });
+  el('circle', { cx: CX, cy: CY, r: R, 'class': 'wf' }, svg);
+  el('circle', { cx: CX, cy: CY + R, r: 12, 'class': 'wf' }, svg).style.fill = 'var(--bg)'; // 노치
+
+  for (var c = 0; c < 7; c++) {
+    var tx = el('text', { x: gridLeft + c * PITCH + DIE / 2, y: gridTop - 12, 'class': 'dow' }, svg);
+    tx.textContent = DOW[c];
+  }
+  for (var r = 0; r < 7; r++) {
+    var wk = el('text', { x: gridLeft - 10, y: gridTop + r * PITCH + DIE / 2 + 4, 'class': 'wk', 'text-anchor': 'end' }, svg);
+    wk.textContent = (r + 1) + '주';
+    for (var cc = 0; cc < 7; cc++) {
+      var idx = r * 7 + cc;
+      var d = addDays(START, idx);
+      var key = iso(d);
+      var done = doneMap[key];
+      var cls = 'die' + ((cc === 2 || cc === 3) ? ' weekend' : '') + (done ? ' done' : '') + (idx === todayIdx ? ' today' : '');
+      var parent = svg;
+      if (done) {
+        parent = el('a', { href: 'days/' + key + '.html' }, svg);
+      }
+      var g = el('g', {}, parent);
+      var rect = el('rect', { x: gridLeft + cc * PITCH, y: gridTop + r * PITCH, width: DIE, height: DIE, 'class': cls }, g);
+      var num = el('text', { x: gridLeft + cc * PITCH + DIE / 2, y: gridTop + r * PITCH + DIE / 2 + 4, 'text-anchor': 'middle', 'class': 'dnum' }, g);
+      num.textContent = (d.getMonth() + 1) + '/' + d.getDate();
+      var t = el('title', {}, g);
+      t.textContent = key + ' (' + DOW[cc] + ') · ' + (r + 1) + '주차 ' + (cc + 1) + '일째\n' + (done ? '기록: ' + done.title : '예정: ' + PLAN[idx]);
+      void rect;
+    }
+  }
+  document.getElementById('wafer').appendChild(svg);
+
+  /* ── 통계·목록 ── */
+  document.getElementById('stat-done').innerHTML = DAYS.length + ' <small>/ 49 기록</small>';
+  var st = document.getElementById('stat-today');
+  if (todayIdx >= 0 && todayIdx < 49) {
+    st.textContent = '오늘 ' + iso(today) + ' · ' + (Math.floor(todayIdx / 7) + 1) + '주차 ' + (todayIdx % 7 + 1) + '일째 · ' + PLAN[todayIdx];
+  } else if (todayIdx < 0) {
+    st.textContent = '시작 전 (D-' + (-todayIdx) + ')';
+  } else {
+    st.textContent = '7주 과정 종료';
+  }
+
+  var list = document.getElementById('daylist');
+  var sorted = DAYS.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+  for (var k = 0; k < sorted.length; k++) {
+    var li = document.createElement('li');
+    var di = Math.round((new Date(sorted[k].date.replace(/-/g, '/')) - START) / 86400000);
+    li.innerHTML = '<span class="d">day ' + pad(di + 1) + ' · ' + sorted[k].date + '</span><a href="days/' + sorted[k].date + '.html">' + sorted[k].title + '</a>';
+    list.appendChild(li);
+  }
+  if (!sorted.length) list.innerHTML = '<li class="muted">아직 기록이 없습니다.</li>';
+
+  var nextIdx = -1;
+  for (var n = 0; n < 49; n++) { if (!doneMap[iso(addDays(START, n))]) { nextIdx = n; break; } }
+  if (nextIdx >= 0) {
+    document.getElementById('upnext').innerHTML = '<strong>다음 예정</strong><br>' + iso(addDays(START, nextIdx)) + ' (' + DOW[nextIdx % 7] + ') · ' + PLAN[nextIdx];
+  }
+})();
+</script>
+</body>
+</html>
